@@ -7,8 +7,12 @@ if [ ! -f /home/node/.openclaw/openclaw.json ]; then
       -e "s|__AFFINE_AGENT_EMAIL__|${AFFINE_AGENT_EMAIL:-}|g" \
       -e "s|__AFFINE_AGENT_PASSWORD__|${AFFINE_AGENT_PASSWORD:-}|g" \
       -e "s|__ALLOWED_ORIGIN__|https://${RAILWAY_PUBLIC_DOMAIN:-claw.eysho.info}|g" \
+      -e "s|__TRUSTED_PROXY_RANGE__|${TRUSTED_PROXY_RANGE:-172.30.0.3}|g" \
       /openclaw-config/openclaw.json > /home/node/.openclaw/openclaw.json
 fi
+
+# Refresh proxy trust and browser origins from deployment variables without replacing other persisted settings.
+node -e 'const fs=require("fs");const p="/home/node/.openclaw/openclaw.json";const c=JSON.parse(fs.readFileSync(p,"utf8"));c.gateway=c.gateway||{};c.gateway.trustedProxies=(process.env.TRUSTED_PROXY_RANGE||"172.30.0.3").split(",").map(x=>x.trim()).filter(Boolean);c.gateway.controlUi=c.gateway.controlUi||{};const o=["https://claw.eysho.info",`https://${process.env.RAILWAY_PUBLIC_DOMAIN||"claw.eysho.info"}`];c.gateway.controlUi.allowedOrigins=[...new Set(o)];fs.writeFileSync(p,JSON.stringify(c,null,2)+"\n");'
 
 # Load SOUL.md from GitHub profile README using PAT
 if [ -n "$GITHUB_PAT_TOKEN" ]; then

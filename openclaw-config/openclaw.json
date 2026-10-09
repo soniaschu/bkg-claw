@@ -41,7 +41,10 @@
       ]
     },
     "mode": "local",
-    "bind": "lan"
+    "bind": "lan",
+    "trustedProxies": [
+      "__TRUSTED_PROXY_RANGE__"
+    ]
   },
   "agents": {
     "defaults": {

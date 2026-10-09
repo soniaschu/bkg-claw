@@ -31,6 +31,7 @@ Railway does not deploy this Docker Compose stack as one service. Create two Rai
 - Set `PROXY_URL` to `http://claude-code-free.railway.internal:8082` (replace `claude-code-free` if you name the proxy service differently).
 - Set `NVIDIA_API_KEY` to the same NVIDIA key used by the proxy service. This enables the NVIDIA Magpie speech plugin without putting the key in the config file.
 - Set `OPENCLAW_GATEWAY_TOKEN` to a long, unique random secret.
+- Set `TRUSTED_PROXY_RANGE` to the exact private proxy IP/CIDR Railway uses for this service. Do not use `0.0.0.0/0`; OpenClaw rejects untrusted forwarded-client headers by design.
 - Set `MODEL` to the model ID used by your proxy, for example `z-ai/glm-5.3`.
 - Generate a public domain in Railway. Railway provides `RAILWAY_PUBLIC_DOMAIN`; the entrypoint uses it to allow the dashboard's browser origin.
 - Attach a persistent Railway volume mounted at `/home/node/.openclaw`. Without this volume, gateway settings and device-pairing state can be lost on redeploy.
