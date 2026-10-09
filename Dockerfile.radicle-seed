@@ -1,0 +1,36 @@
+# Stage 1: Download and extract pre-built binaries
+FROM debian:bookworm-slim AS fetcher
+RUN apt-get update && apt-get install -y --no-install-recommends curl xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp
+RUN curl -sSfL -o radicle.tar.xz https://files.radicle.xyz/releases/latest/radicle-x86_64-unknown-linux-musl.tar.xz \
+    && tar -xJf radicle.tar.xz --strip-components=1 \
+    && curl -sSfL -o radicle-httpd.tar.xz https://files.radicle.xyz/releases/radicle-httpd/latest/radicle-httpd-x86_64-unknown-linux-musl.tar.xz \
+    && tar -xJf radicle-httpd.tar.xz --strip-components=1
+
+# Stage 2: Minimal runtime
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --system radicle && \
+    useradd --system --gid radicle --create-home --home-dir /home/radicle radicle
+
+COPY --from=fetcher /tmp/bin/rad /usr/local/bin/
+COPY --from=fetcher /tmp/bin/radicle-node /usr/local/bin/
+COPY --from=fetcher /tmp/bin/radicle-httpd /usr/local/bin/
+COPY --from=fetcher /tmp/bin/git-remote-rad /usr/local/bin/
+
+COPY radicle-config/entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+
+RUN mkdir -p /home/radicle/.radicle && chown -R radicle:radicle /home/radicle
+
+USER radicle
+WORKDIR /home/radicle
+ENV RAD_HOME=/home/radicle/.radicle
+
+EXPOSE 8776 8080
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["sh", "-c", "radicle-node --listen 0.0.0.0:8776 & radicle-httpd --listen 0.0.0.0:8080 & wait"]

@@ -1,0 +1,39 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+
+# Runtime state and device pairing
+openclaw-config/agents/
+openclaw-config/canvas/
+openclaw-config/cron/
+openclaw-config/devices/
+openclaw-config/workspace/*
+!openclaw-config/workspace/SOUL.md
+!openclaw-config/workspace/AGENTS.md
+openclaw-config/update-check.json
+openclaw-config/*.log
+
+# Local credentials and user records
+scripts/affine-users.json
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Local agent workspaces
+claude-code-free/agent_workspace/
+claude-code-free/.env
+
+# Project-maintained AFFiNE plugin and persona defaults
+!openclaw-config/extensions/
+!openclaw-config/extensions/affine/
+!openclaw-config/extensions/affine/**
+
+# Temporary local backup used while replacing the speech plugin
+.nvidia-speech-backup/

@@ -1,0 +1,11 @@
+# Official, version-pinned OpenClaw runtime. The host needs no source build.
+FROM ghcr.io/openclaw/openclaw:2026.9.9
+
+USER root
+WORKDIR /app
+COPY openclaw-config /openclaw-config
+
+ENV NODE_ENV=production
+EXPOSE 18789
+ENTRYPOINT ["/bin/sh", "/openclaw-config/entrypoint.sh"]
+CMD ["sh", "-c", "node /app/openclaw.mjs gateway --allow-unconfigured --bind lan --port ${PORT:-18789}"]

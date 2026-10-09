@@ -1,0 +1,51 @@
+# Stage 1: Download and extract pre-built binaries
+FROM debian:bookworm-slim AS fetcher
+RUN apt-get update && apt-get install -y --no-install-recommends curl xz-utils ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /tmp
+RUN curl -sSfL -o radicle.tar.xz https://files.radicle.xyz/releases/latest/radicle-x86_64-unknown-linux-musl.tar.xz \
+    && tar -xJf radicle.tar.xz --strip-components=1 \
+    && curl -sSfL -o radicle-httpd.tar.xz https://files.radicle.xyz/releases/radicle-httpd/latest/radicle-httpd-x86_64-unknown-linux-musl.tar.xz \
+    && tar -xJf radicle-httpd.tar.xz --strip-components=1
+
+# Stage 2: Minimal runtime
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --system radicle && \
+    useradd --system --gid radicle --create-home --home-dir /home/radicle radicle
+
+COPY --from=fetcher /tmp/bin/rad /usr/local/bin/
+COPY --from=fetcher /tmp/bin/radicle-node /usr/local/bin/
+COPY --from=fetcher /tmp/bin/radicle-httpd /usr/local/bin/
+COPY --from=fetcher /tmp/bin/git-remote-rad /usr/local/bin/
+
+# Bake config into the image (no bind mount on Railway)
+COPY radicle-config/entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+
+RUN mkdir -p /home/radicle/.radicle && chown -R radicle:radicle /home/radicle
+
+# Railway volumes mount as root; RAILWAY_RUN_UID=0 lets the container write to them
+ENV RAILWAY_RUN_UID=0
+ENV RAD_HOME=/home/radicle/.radicle
+ENV RAD_ALIAS=seed
+ENV RAD_PASSPHRASE=
+# Seeding policy: "block" (selective) or "allow" (permissive)
+ENV RAD_SEED_POLICY=block
+# Scope for permissive mode: "all" or "followed"
+ENV RAD_SEED_SCOPE=followed
+# Comma-separated repo IDs to seed (for selective mode)
+# Example: rad:z3gqcJUoA1n9HaHKufZs5FCSGazv5,rad:z9DV738hJpCa6aQXqvQC4SjaZvsi
+ENV RAD_SEED_REPOS=
+# Comma-separated repo IDs to block (for permissive mode)
+ENV RAD_BLOCK_REPOS=
+# External address for P2P connections (auto-set by Railway if public domain configured)
+ENV RAD_EXTERNAL_ADDRESS=
+
+EXPOSE 8776 8080
+
+ENTRYPOINT ["/entrypoint.sh"]
+# Railway sets PORT for public networking; httpd listens on PORT, node always on 8776
+CMD ["sh", "-c", "radicle-node --listen 0.0.0.0:8776 & radicle-httpd --listen 0.0.0.0:${PORT:-8080} & wait"]

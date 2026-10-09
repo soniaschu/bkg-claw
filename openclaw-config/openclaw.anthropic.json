@@ -1,0 +1,14 @@
+{
+  "gateway": {
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/__MODEL__"
+      }
+    }
+  }
+}

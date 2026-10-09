@@ -1,0 +1,92 @@
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "claude-code-free": {
+        "baseUrl": "__PROXY_URL__",
+        "apiKey": "${ANTHROPIC_API_KEY}",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "__MODEL__",
+            "name": "__MODEL__ (via NIM)",
+            "reasoning": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 81920
+          }
+        ]
+      }
+    }
+  },
+  "gateway": {
+    "auth": {
+      "mode": "token"
+    },
+    "controlUi": {
+      "dangerouslyDisableDeviceAuth": false,
+      "dangerouslyAllowHostHeaderOriginFallback": false,
+      "allowInsecureAuth": false,
+      "allowedOrigins": [
+        "https://claw.eysho.info",
+        "__ALLOWED_ORIGIN__"
+      ]
+    }
+  },
+  "tools": {
+    "allow": [
+      "affine"
+    ]
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "claude-code-free/__MODEL__"
+      }
+    }
+  },
+  "plugins": {
+    "entries": {
+      "affine": {
+        "enabled": true,
+        "config": {
+          "affineUrl": "__AFFINE_URL__",
+          "email": "__AFFINE_AGENT_EMAIL__",
+          "password": "__AFFINE_AGENT_PASSWORD__"
+        }
+      },
+      "nvidia-speech": {
+        "enabled": true
+      }
+    },
+    "allow": [
+      "affine",
+      "nvidia-speech"
+    ]
+  },
+  "messages": {
+    "tts": {
+      "auto": "always",
+      "provider": "nvidia",
+      "providers": {
+        "nvidia": {
+          "apiKey": "${NVIDIA_API_KEY}",
+          "model": "magpie-tts-multilingual",
+          "voice": "Magpie-Multilingual.DE-DE.Mia",
+          "language": "de-DE",
+          "sampleRate": 22050,
+          "format": "wav"
+        }
+      }
+    }
+  }
+}

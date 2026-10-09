@@ -1,0 +1,115 @@
+services:
+  claude-code-free:
+    build:
+      context: ./claude-code-free
+      dockerfile: ../Dockerfile.claude-code-free
+    container_name: claude-code-free
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    networks:
+      default:
+        # Alias matching Open WebUI's is_anthropic_url() check: "api.anthropic.com" in url
+        aliases:
+          - api.anthropic.com
+    environment:
+      # NVIDIA NIM API Key (required) - get from https://build.nvidia.com/settings/api-keys
+      - NVIDIA_NIM_API_KEY=${NVIDIA_NIM_API_KEY}
+      # Model selection
+      - MODEL=${MODEL:-nvidia_nim/stepfun-ai/step-3.5-flash}
+      # NVIDIA NIM settings
+      - NVIDIA_NIM_MAX_TOKENS=81920
+      - NVIDIA_NIM_TEMPERATURE=1.0
+      - NVIDIA_NIM_TOP_P=1.0
+      - NVIDIA_NIM_TOP_K=-1
+      - NVIDIA_NIM_RATE_LIMIT=40
+      - NVIDIA_NIM_RATE_WINDOW=60
+      - NVIDIA_NIM_REASONING_EFFORT=high
+      - NVIDIA_NIM_INCLUDE_REASONING=true
+      - NVIDIA_NIM_PRESENCE_PENALTY=0.0
+      - NVIDIA_NIM_FREQUENCY_PENALTY=0.0
+      - NVIDIA_NIM_MIN_P=0.0
+      - NVIDIA_NIM_REPETITION_PENALTY=1.0
+      - NVIDIA_NIM_PARALLEL_TOOL_CALLS=true
+      # Agent config
+      - CLAUDE_WORKSPACE=./agent_workspace
+      - MAX_CLI_SESSIONS=10
+      - ALLOWED_DIR=
+      - FAST_PREFIX_DETECTION=true
+      - ENABLE_NETWORK_PROBE_MOCK=true
+      - ENABLE_TITLE_GENERATION_SKIP=true
+      - ENABLE_SUGGESTION_MODE_SKIP=true
+      - ENABLE_FILEPATH_EXTRACTION_MOCK=true
+      # Telegram (optional)
+      - TELEGRAM_BOT_TOKEN=
+      - ALLOWED_TELEGRAM_USER_ID=
+      - MESSAGING_RATE_LIMIT=1
+      - MESSAGING_RATE_WINDOW=1
+    volumes:
+      - claude-code-free-workspace:/app/agent_workspace
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY:-changeme-secret}
+      # Point directly at NVIDIA NIM (OpenAI-compatible)
+      - OPENAI_API_BASE_URL=https://integrate.api.nvidia.com/v1
+      - OPENAI_API_KEY=${NVIDIA_NIM_API_KEY}
+      # Disable Ollama since we don't use it
+      - ENABLE_OLLAMA_API=false
+      # Open Terminal integration
+      - TERMINAL_SERVER_CONNECTIONS=[{"id":"open-terminal","name":"Open Terminal","url":"http://open-terminal:8000","key":"${OPEN_TERMINAL_API_KEY:-terminal-secret}","auth_type":"bearer","enabled":true}]
+    volumes:
+      - open-webui-data:/app/backend/data
+
+  open-terminal:
+    image: ghcr.io/open-webui/open-terminal:main
+    container_name: open-terminal
+    restart: unless-stopped
+    environment:
+      - OPEN_TERMINAL_API_KEY=${OPEN_TERMINAL_API_KEY:-terminal-secret}
+    volumes:
+      - open-terminal-data:/home/user
+
+  nanoclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.nanoclaw
+    container_name: nanoclaw
+    restart: unless-stopped
+    depends_on:
+      - claude-code-free
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3001:3001"
+      - "8181:8080"
+    environment:
+      # Route API traffic through claude-code-free proxy
+      - ANTHROPIC_BASE_URL=http://claude-code-free:8082
+      - ANTHROPIC_API_KEY=placeholder
+      - CREDENTIAL_PROXY_PORT=3001
+      - CREDENTIAL_PROXY_HOST=0.0.0.0
+      - CONTAINER_IMAGE=nanoclaw-agent:latest
+      - MAX_CONCURRENT_CONTAINERS=5
+      - ASSISTANT_NAME=Andy
+      - TZ=${TZ:-UTC}
+      # Web channel
+      - WEB_CHANNEL_PASSWORD=${WEB_CHANNEL_PASSWORD:-changeme}
+      - WEB_CHANNEL_PORT=8080
+    volumes:
+      # Docker socket for spawning agent containers
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Bind mount to a fixed host path so sibling agent containers
+      # can access the same files via the same absolute paths
+      - /tmp/nanoclaw:/tmp/nanoclaw
+    working_dir: /tmp/nanoclaw
+
+volumes:
+  claude-code-free-workspace:
+  open-webui-data:
+  open-terminal-data:

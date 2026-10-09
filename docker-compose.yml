@@ -1,0 +1,110 @@
+name: bkg-free-the-claw
+
+services:
+  claude-code-free:
+    build:
+      context: ./claude-code-free
+      dockerfile: ../Dockerfile.claude-code-free
+    container_name: bkg-free-the-claw-claude-code-free
+    restart: unless-stopped
+    expose:
+      - "8082"
+    environment:
+      NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY:?NVIDIA_NIM_API_KEY is required}
+      MODEL: nvidia_nim/${MODEL:-stepfun-ai/step-3.5-flash}
+      NVIDIA_NIM_MAX_TOKENS: "81920"
+      NVIDIA_NIM_TEMPERATURE: "1.0"
+      NVIDIA_NIM_TOP_P: "1.0"
+      NVIDIA_NIM_TOP_K: "-1"
+      NVIDIA_NIM_RATE_LIMIT: "40"
+      NVIDIA_NIM_RATE_WINDOW: "60"
+      NVIDIA_NIM_REASONING_EFFORT: high
+      NVIDIA_NIM_INCLUDE_REASONING: "true"
+      NVIDIA_NIM_PRESENCE_PENALTY: "0.0"
+      NVIDIA_NIM_FREQUENCY_PENALTY: "0.0"
+      NVIDIA_NIM_MIN_P: "0.0"
+      NVIDIA_NIM_REPETITION_PENALTY: "1.0"
+      NVIDIA_NIM_PARALLEL_TOOL_CALLS: "true"
+      CLAUDE_WORKSPACE: /app/agent_workspace
+      MAX_CLI_SESSIONS: "10"
+      ALLOWED_DIR: /app/agent_workspace
+      FAST_PREFIX_DETECTION: "true"
+      ENABLE_NETWORK_PROBE_MOCK: "true"
+      ENABLE_TITLE_GENERATION_SKIP: "true"
+      ENABLE_SUGGESTION_MODE_SKIP: "true"
+      ENABLE_FILEPATH_EXTRACTION_MOCK: "true"
+    volumes:
+      - claude-code-free-workspace:/app/agent_workspace
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=bkg_net
+      - traefik.http.routers.claw-api.rule=Host(`claw.eysho.info`) && PathPrefix(`/v1/`)
+      - traefik.http.routers.claw-api.entrypoints=websecure
+      - traefik.http.routers.claw-api.priority=100
+      - traefik.http.routers.claw-api.tls.certresolver=le
+      - traefik.http.routers.claw-api.service=claw-api
+      - traefik.http.services.claw-api.loadbalancer.server.port=8082
+    networks:
+      - claw_internal
+      - bkg_net
+
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.openclaw.railway
+    container_name: bkg-free-the-claw-openclaw
+    restart: unless-stopped
+    depends_on:
+      - claude-code-free
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    expose:
+      - "18789"
+    environment:
+      HOME: /home/node
+      TERM: xterm-256color
+      MODEL: ${MODEL:-nvidia_nim/stepfun-ai/step-3.5-flash}
+      ANTHROPIC_API_KEY: sk-placeholder
+      NVIDIA_API_KEY: ${NVIDIA_NIM_API_KEY:?NVIDIA_NIM_API_KEY is required}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:?OPENCLAW_GATEWAY_TOKEN is required}
+      PROXY_URL: http://claude-code-free:8082
+      AFFINE_URL: ${AFFINE_URL:-http://host.docker.internal:3010}
+      AFFINE_AGENT_EMAIL: ${AFFINE_AGENT_EMAIL:-}
+      AFFINE_AGENT_PASSWORD: ${AFFINE_AGENT_PASSWORD:-}
+      GITHUB_PAT_TOKEN: ${GITHUB_PAT_TOKEN:-}
+      TWITTER_CLIENT_ID: ${TWITTER_CLIENT_ID:-}
+      TWITTER_CLIENT_SECRET: ${TWITTER_CLIENT_SECRET:-}
+      TWITTER_BEARER_TOKEN: ${TWITTER_BEARER_TOKEN:-}
+      TWITTER_REFRESH_TOKEN: ${TWITTER_REFRESH_TOKEN:-}
+      COMFY_UI_API_KEY: ${COMFY_UI_API_KEY:-}
+      ETH_WALLET_PRIVATE_KEY: ${ETH_WALLET_PRIVATE_KEY:-}
+    user: "root"
+    volumes:
+      - ./openclaw-config:/openclaw-config:ro
+      - openclaw-data:/home/node/.openclaw
+    init: true
+    entrypoint: ["/bin/sh", "/openclaw-config/entrypoint.sh"]
+    command: ["node", "openclaw.mjs", "gateway", "--allow-unconfigured", "--bind", "lan", "--port", "18789"]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=bkg_net
+      - traefik.http.routers.claw-core.rule=Host(`claw.eysho.info`)
+      - traefik.http.routers.claw-core.entrypoints=websecure
+      - traefik.http.routers.claw-core.tls.certresolver=le
+      - traefik.http.routers.claw-core.service=claw-core
+      - traefik.http.services.claw-core.loadbalancer.server.port=18789
+    networks:
+      bkg_net: {}
+      claw_internal: {}
+
+networks:
+  bkg_net:
+    external: true
+  claw_internal:
+    internal: true
+
+volumes:
+  claude-code-free-workspace:
+    name: bkg-free-the-claw-workspace
+  openclaw-data:
+    name: bkg-free-the-claw-openclaw-data

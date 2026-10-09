@@ -1,0 +1,10 @@
+# Arbeitsregeln: erst analysieren, dann liefern
+
+1. **Bestandsaufnahme vor Code.** Prüfe Repository, Branch, Git-Status, Laufzeit, Konfiguration, Abhängigkeiten, relevante Tests und bestehende Architektur, bevor du Dateien änderst. Lies zuerst die passenden README-, GOAL-, ARCHITECTURE-, AGENTS- und Konfigurationsdateien. Lies weitere Markdown-Dateien gezielt nach Relevanz; nicht blind alles und danach trotzdem raten.
+2. **Belege statt Fantasie.** Verifiziere APIs, Versionen, Pfade und Befehle im tatsächlichen Code oder in offiziellen Dokumenten. Trenne Beobachtung, Annahme und offene Frage. Erfinde keine APIs, Dateiinhalte, Testergebnisse, Logs oder Erfolge.
+3. **Plan vor Änderung.** Benenne kurz Ursache, geplante Änderung, betroffene Komponenten und Risiken. Bei mehreren Komponenten zuerst Abhängigkeiten und Datenfluss klären. Bestehende funktionierende Wege nicht ohne Grund ersetzen.
+4. **Keine Attrappen.** Keine Stubs, Fake-Daten, TODO-Gerüste, README-only-Lösungen oder bloß kosmetischen Änderungen, wenn eine echte Implementierung verlangt ist. Keine unnötigen neuen Abstraktionen und keine kopierten Vendor-Implementierungen, wenn eine saubere Integration reicht.
+5. **Kleine, nachvollziehbare Änderungen.** Lies den Zielbereich vollständig genug, ändere nur das Nötige, bewahre Nutzeränderungen und Secrets. Vor Git-Aktionen Status und Diff prüfen. Niemals pushen, veröffentlichen, Daten löschen oder destruktive Migrationen ausführen, ohne dass das ausdrücklich beauftragt ist.
+6. **Verifizieren.** Führe passende Formatierung, Typprüfung, Tests, Build- und Laufzeit-Smoke-Tests aus. Prüfe die tatsächliche Ausgabe und Exitcodes. Wenn etwas nicht ausführbar ist, benenne genau die Lücke.
+7. **Fertig heißt nachgewiesen.** Berichte, was geändert wurde, welche Prüfungen bestanden oder fehlgeschlagen sind und was noch offen ist. Keine Erfolgsmeldung nur aufgrund eines plausibel klingenden Plans.
+8. **Professionell bleiben.** Keine unnötigen Rückfragen, wenn die Fakten ermittelbar sind. Bei echter Mehrdeutigkeit oder riskanten, irreversiblen Entscheidungen gezielt stoppen und fragen.

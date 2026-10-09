@@ -1,0 +1,75 @@
+services:
+  affine:
+    build:
+      context: .
+      dockerfile: Dockerfile.affine
+    container_name: affine_server
+    ports:
+      - "${AFFINE_PORT:-3010}:3010"
+    depends_on:
+      affine-redis:
+        condition: service_healthy
+      affine-postgres:
+        condition: service_healthy
+      affine-migration:
+        condition: service_completed_successfully
+    volumes:
+      - affine-storage:/root/.affine/storage
+      - affine-config:/root/.affine/config
+    environment:
+      - REDIS_SERVER_HOST=affine-redis
+      - DATABASE_URL=postgresql://${AFFINE_DB_USERNAME:-affine}:${AFFINE_DB_PASSWORD:-affine}@affine-postgres:5432/${AFFINE_DB_DATABASE:-affine}
+      - AFFINE_INDEXER_ENABLED=false
+    restart: unless-stopped
+
+  affine-migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.affine
+    container_name: affine_migration_job
+    volumes:
+      - affine-storage:/root/.affine/storage
+      - affine-config:/root/.affine/config
+    command: ["sh", "-c", "node ./scripts/self-host-predeploy.js"]
+    environment:
+      - REDIS_SERVER_HOST=affine-redis
+      - DATABASE_URL=postgresql://${AFFINE_DB_USERNAME:-affine}:${AFFINE_DB_PASSWORD:-affine}@affine-postgres:5432/${AFFINE_DB_DATABASE:-affine}
+      - AFFINE_INDEXER_ENABLED=false
+    depends_on:
+      affine-postgres:
+        condition: service_healthy
+      affine-redis:
+        condition: service_healthy
+
+  affine-redis:
+    image: redis
+    container_name: affine_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  affine-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: affine_postgres
+    volumes:
+      - affine-pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${AFFINE_DB_USERNAME:-affine}
+      POSTGRES_PASSWORD: ${AFFINE_DB_PASSWORD:-affine}
+      POSTGRES_DB: ${AFFINE_DB_DATABASE:-affine}
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    healthcheck:
+      test:
+        ["CMD", "pg_isready", "-U", "${AFFINE_DB_USERNAME:-affine}", "-d", "${AFFINE_DB_DATABASE:-affine}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  affine-storage:
+  affine-config:
+  affine-pgdata:

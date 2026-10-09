@@ -1,0 +1,44 @@
+services:
+  openclaw:
+    build: ./openclaw
+    container_name: openclaw
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+      - "18790:18790"
+    environment:
+      - HOME=/home/node
+      - TERM=xterm-256color
+      - MODEL=${MODEL:-claude-sonnet-4-5-20250929}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN:-changeme}
+      - OPENCLAW_GATEWAY_PASSWORD=${OPENCLAW_GATEWAY_PASSWORD:-}
+      - GITHUB_PAT_TOKEN=${GITHUB_PAT_TOKEN}
+      - TWITTER_CLIENT_ID=${TWITTER_CLIENT_ID}
+      - TWITTER_CLIENT_SECRET=${TWITTER_CLIENT_SECRET}
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+      - TWITTER_REFRESH_TOKEN=${TWITTER_REFRESH_TOKEN}
+      # ComfyUI Cloud: enables video generation scripts
+      - COMFY_UI_API_KEY=${COMFY_UI_API_KEY}
+      # ETH Wallet Private Key: enables smart contract interactions
+      - ETH_WALLET_PRIVATE_KEY=${ETH_WALLET_PRIVATE_KEY}
+    user: "root"
+    volumes:
+      - ./openclaw-config:/openclaw-config:ro
+      - openclaw-data:/home/node/.openclaw
+    init: true
+    entrypoint: ["/bin/sh", "/openclaw-config/entrypoint.anthropic.sh"]
+    command:
+      [
+        "node",
+        "openclaw.mjs",
+        "gateway",
+        "--allow-unconfigured",
+        "--bind",
+        "lan",
+        "--port",
+        "18789",
+      ]
+
+volumes:
+  openclaw-data:

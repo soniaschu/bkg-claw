@@ -1,0 +1,40 @@
+services:
+  radicle-seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.radicle-seed
+    container_name: radicle-seed
+    restart: unless-stopped
+    ports:
+      - "8776:8776" # P2P gossip protocol
+      - "8080:8080" # HTTP API
+    volumes:
+      - ./radicle-config:/radicle-config:ro
+      - radicle-data:/home/radicle/.radicle
+    environment:
+      - RAD_ALIAS=${RAD_ALIAS:-seed}
+      - RAD_PASSPHRASE=${RAD_PASSPHRASE:-}
+      - RAD_SEED_POLICY=${RAD_SEED_POLICY:-allow}
+      - RAD_SEED_SCOPE=${RAD_SEED_SCOPE:-all}
+      - RAD_EXTERNAL_ADDRESS=${RAD_EXTERNAL_ADDRESS:-}
+
+  radicle-explorer:
+    build:
+      context: .
+      dockerfile: Dockerfile.radicle-explorer
+    container_name: radicle-explorer
+    restart: unless-stopped
+    depends_on:
+      - radicle-seed
+    ports:
+      - "8081:80"
+    environment:
+      - EXPLORER_PREFERRED_SEED=${EXPLORER_PREFERRED_SEED:-radicle-seed}
+      - EXPLORER_PREFERRED_SEED_PORT=${EXPLORER_PREFERRED_SEED_PORT:-8080}
+      - EXPLORER_PREFERRED_SEED_SCHEME=${EXPLORER_PREFERRED_SEED_SCHEME:-http}
+      - EXPLORER_HTTPD_PORT=${EXPLORER_HTTPD_PORT:-8080}
+      - EXPLORER_LOCAL_HTTPD_PORT=${EXPLORER_LOCAL_HTTPD_PORT:-8080}
+      - EXPLORER_HTTPD_SCHEME=${EXPLORER_HTTPD_SCHEME:-http}
+
+volumes:
+  radicle-data:
