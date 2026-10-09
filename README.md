@@ -35,7 +35,7 @@ Railway does not deploy this Docker Compose stack as one service. Create two Rai
 - Generate a public domain in Railway. Railway provides `RAILWAY_PUBLIC_DOMAIN`; the entrypoint uses it to allow the dashboard's browser origin.
 - Attach a persistent Railway volume mounted at `/home/node/.openclaw`. Without this volume, gateway settings and device-pairing state can be lost on redeploy.
 
-The Railway config files build each service from its matching Dockerfile. OpenClaw uses the official version-pinned `ghcr.io/openclaw/openclaw:2026.9.9` runtime; the NVIDIA speech plugin is installed from GitHub on a fresh volume and configured for German Magpie TTS. The plugin's current Parakeet STT endpoint is English-only, so this setup does not pretend German transcription is supported. The proxy service should stay private; only the OpenClaw dashboard needs public ingress. Store all credentials in Railway's Variables UI, never in Git.
+The Railway config files build each service from its matching Dockerfile. OpenClaw uses the official version-pinned `ghcr.io/openclaw/openclaw:2026.9.9` runtime; the NVIDIA speech plugin is installed from GitHub on a fresh volume and configured for German Magpie TTS. The plugin's current Parakeet STT endpoint is English-only, so this setup does not pretend German transcription is supported. The proxy service should stay private; only the OpenClaw dashboard needs public ingress. Store all credentials in Railway's Variables UI, never in Git. The legacy AFFiNE extension source is retained for a later API-compatible port, but is intentionally not enabled in this runtime because the current plugin installer rejects its old bundled-extension manifest.
 
 ## Configuration and security
 

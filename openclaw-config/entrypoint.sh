@@ -1,13 +1,14 @@
 #!/bin/sh
-# Copy config files into the named volume, replacing __MODEL__ placeholder
-sed -e "s|__MODEL__|${MODEL:-moonshotai/kimi-k2-thinking}|g" \
-    -e "s|__PROXY_URL__|${PROXY_URL:-http://claude-code-free:8082}|g" \
-    -e "s|__AFFINE_URL__|${AFFINE_URL:-http://host.docker.internal:3010}|g" \
-    -e "s|__AFFINE_AGENT_EMAIL__|${AFFINE_AGENT_EMAIL:-paul@affine.local}|g" \
-    -e "s|__AFFINE_AGENT_PASSWORD__|${AFFINE_AGENT_PASSWORD:-}|g" \
-    -e "s|__ALLOWED_ORIGIN__|https://${RAILWAY_PUBLIC_DOMAIN:-claw.eysho.info}|g" \
-    /openclaw-config/openclaw.json \
-  > /home/node/.openclaw/openclaw.json 2>/dev/null || true
+# Seed configuration once; the persistent config must retain plugin install metadata.
+if [ ! -f /home/node/.openclaw/openclaw.json ]; then
+  sed -e "s|__MODEL__|${MODEL:-stepfun-ai/step-3.5-flash}|g" \
+      -e "s|__PROXY_URL__|${PROXY_URL:-http://claude-code-free:8082}|g" \
+      -e "s|__AFFINE_URL__|${AFFINE_URL:-http://host.docker.internal:3010}|g" \
+      -e "s|__AFFINE_AGENT_EMAIL__|${AFFINE_AGENT_EMAIL:-}|g" \
+      -e "s|__AFFINE_AGENT_PASSWORD__|${AFFINE_AGENT_PASSWORD:-}|g" \
+      -e "s|__ALLOWED_ORIGIN__|https://${RAILWAY_PUBLIC_DOMAIN:-claw.eysho.info}|g" \
+      /openclaw-config/openclaw.json > /home/node/.openclaw/openclaw.json
+fi
 
 # Load SOUL.md from GitHub profile README using PAT
 if [ -n "$GITHUB_PAT_TOKEN" ]; then
@@ -85,18 +86,24 @@ for file in SOUL.md AGENTS.md; do
   fi
 done
 
-# Install the AFFiNE extension from this project's maintained source on fresh volumes.
-if [ ! -f /home/node/.openclaw/extensions/affine/openclaw.plugin.json ]; then
-  mkdir -p /home/node/.openclaw/extensions
-  cp -a /openclaw-config/extensions/affine /home/node/.openclaw/extensions/affine
-fi
-
-# Install the explicitly requested trusted NVIDIA speech plugin on fresh volumes.
+# Build the GitHub source first: the repository does not ship dist/ in Git.
+# Keep the source in the persistent volume and install only its compiled artifact.
 if [ ! -f /home/node/.openclaw/extensions/nvidia-speech/openclaw.plugin.json ]; then
-  echo "Installing OpenClaw NVIDIA speech plugin..."
-  node /app/openclaw.mjs plugins install github:dhiraj-salian/openclaw-nvidia-speech --force || echo "WARNING: NVIDIA speech plugin installation failed; inspect gateway logs."
+  PLUGIN_SOURCE=/home/node/.openclaw/plugin-sources/nvidia-speech
+  mkdir -p /home/node/.openclaw/plugin-sources
+  if [ ! -f "$PLUGIN_SOURCE/package.json" ]; then
+    rm -rf "$PLUGIN_SOURCE"
+    git clone --depth 1 https://github.com/dhiraj-salian/openclaw-nvidia-speech.git "$PLUGIN_SOURCE"
+  fi
+  (cd "$PLUGIN_SOURCE" && npm install --include=dev --no-audit --no-fund && npm run ci) || {
+    echo "ERROR: NVIDIA speech plugin build failed; refusing to claim speech is configured."
+    exit 1
+  }
+  rm -rf "$PLUGIN_SOURCE/node_modules"
+  node /app/openclaw.mjs plugins install "$PLUGIN_SOURCE" --force --accept-capabilities
 fi
 
-chown -R node:node /home/node/.openclaw
+# Gateway runs as root in this image; root-owned plugin sources pass OpenClaw's trust checks.
+chown -R root:root /home/node/.openclaw
 
 exec "$@"

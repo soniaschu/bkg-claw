@@ -4,12 +4,12 @@
   "private": true,
   "description": "AFFiNE document tools for agents",
   "type": "module",
-  "devDependencies": {
-    "openclaw": "workspace:*"
-  },
   "openclaw": {
     "extensions": [
       "./index.ts"
     ]
+  },
+  "devDependencies": {
+    "openclaw": "workspace:*"
   }
 }

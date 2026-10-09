@@ -7,5 +7,6 @@ COPY openclaw-config /openclaw-config
 
 ENV NODE_ENV=production
 EXPOSE 18789
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||'18789')+'/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"
 ENTRYPOINT ["/bin/sh", "/openclaw-config/entrypoint.sh"]
 CMD ["sh", "-c", "node /app/openclaw.mjs gateway --allow-unconfigured --bind lan --port ${PORT:-18789}"]

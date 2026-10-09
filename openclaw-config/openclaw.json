@@ -33,19 +33,15 @@
       "mode": "token"
     },
     "controlUi": {
-      "dangerouslyDisableDeviceAuth": false,
       "dangerouslyAllowHostHeaderOriginFallback": false,
       "allowInsecureAuth": false,
       "allowedOrigins": [
         "https://claw.eysho.info",
         "__ALLOWED_ORIGIN__"
       ]
-    }
-  },
-  "tools": {
-    "allow": [
-      "affine"
-    ]
+    },
+    "mode": "local",
+    "bind": "lan"
   },
   "agents": {
     "defaults": {
@@ -55,37 +51,34 @@
     }
   },
   "plugins": {
+    "allow": [
+      "nvidia-speech",
+      "github",
+      "memory-core"
+    ],
     "entries": {
-      "affine": {
-        "enabled": true,
-        "config": {
-          "affineUrl": "__AFFINE_URL__",
-          "email": "__AFFINE_AGENT_EMAIL__",
-          "password": "__AFFINE_AGENT_PASSWORD__"
-        }
-      },
       "nvidia-speech": {
         "enabled": true
+      },
+      "github": {
+        "enabled": true
+      },
+      "memory-core": {
+        "enabled": true
       }
-    },
-    "allow": [
-      "affine",
-      "nvidia-speech"
-    ]
+    }
   },
-  "messages": {
-    "tts": {
-      "auto": "always",
-      "provider": "nvidia",
-      "providers": {
-        "nvidia": {
-          "apiKey": "${NVIDIA_API_KEY}",
-          "model": "magpie-tts-multilingual",
-          "voice": "Magpie-Multilingual.DE-DE.Mia",
-          "language": "de-DE",
-          "sampleRate": 22050,
-          "format": "wav"
-        }
+  "tts": {
+    "auto": "always",
+    "provider": "nvidia",
+    "providers": {
+      "nvidia": {
+        "apiKey": "${NVIDIA_API_KEY}",
+        "model": "magpie-tts-multilingual",
+        "speakerVoice": "Magpie-Multilingual.DE-DE.Mia",
+        "language": "de-DE",
+        "sampleRate": 22050,
+        "format": "wav"
       }
     }
   }

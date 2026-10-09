@@ -6,7 +6,6 @@
 !.env.example
 openclaw/
 AFFiNE/
-claude-code-free/
 nanoclaw/
 open-terminal/
 node_modules/
@@ -21,3 +20,4 @@ openclaw-config/cron/
 openclaw-config/devices/
 openclaw-config/update-check.json
 openclaw-config/workspace/USER.md
+openclaw-config/extensions/affine/

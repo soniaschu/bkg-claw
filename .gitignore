@@ -37,3 +37,7 @@ claude-code-free/.env
 
 # Temporary local backup used while replacing the speech plugin
 .nvidia-speech-backup/
+
+# Node dependency installs
+node_modules/
+**/node_modules/
