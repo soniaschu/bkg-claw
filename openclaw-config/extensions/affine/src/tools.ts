@@ -1,18 +1,16 @@
-import { Type } from "@sinclair/typebox";
-import type { OpenClawPluginApi } from "../../../src/plugins/types.js";
+import { Type } from "typebox";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/plugin-runtime";
 import { AffineClient } from "./client.js";
 
 type PluginCfg = {
   affineUrl?: string;
-  email?: string;
-  password?: string;
 };
 
 function getClient(api: OpenClawPluginApi): AffineClient {
   const cfg = (api.pluginConfig ?? {}) as PluginCfg;
-  const affineUrl = cfg.affineUrl ?? "http://localhost:3010";
-  const email = cfg.email;
-  const password = cfg.password;
+  const affineUrl = cfg.affineUrl ?? process.env.AFFINE_URL ?? "http://host.docker.internal:3010";
+  const email = process.env.AFFINE_AGENT_EMAIL;
+  const password = process.env.AFFINE_AGENT_PASSWORD;
   if (!email || !password) {
     throw new Error("AFFiNE plugin requires 'email' and 'password' in plugin config");
   }

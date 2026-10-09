@@ -9,14 +9,6 @@
       "affineUrl": {
         "type": "string",
         "description": "Base URL of the AFFiNE server (e.g. http://localhost:3010)"
-      },
-      "email": {
-        "type": "string",
-        "description": "Email for the agent user account"
-      },
-      "password": {
-        "type": "string",
-        "description": "Password for the agent user account"
       }
     }
   }

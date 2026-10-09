@@ -4,6 +4,8 @@ FROM ghcr.io/openclaw/openclaw:2026.9.9
 USER root
 WORKDIR /app
 COPY openclaw-config /openclaw-config
+COPY openclaw-config/extensions/affine /app/dist/extensions/affine
+RUN cd /app/dist/extensions/affine && node scripts/build.mjs
 
 ENV NODE_ENV=production
 EXPOSE 18789

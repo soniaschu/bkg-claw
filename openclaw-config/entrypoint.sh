@@ -4,15 +4,13 @@ if [ ! -f /home/node/.openclaw/openclaw.json ]; then
   sed -e "s|__MODEL__|${MODEL:-z-ai/glm-5.3}|g" \
       -e "s|__PROXY_URL__|${PROXY_URL:-http://claude-code-free:8082}|g" \
       -e "s|__AFFINE_URL__|${AFFINE_URL:-http://host.docker.internal:3010}|g" \
-      -e "s|__AFFINE_AGENT_EMAIL__|${AFFINE_AGENT_EMAIL:-}|g" \
-      -e "s|__AFFINE_AGENT_PASSWORD__|${AFFINE_AGENT_PASSWORD:-}|g" \
       -e "s|__ALLOWED_ORIGIN__|https://${RAILWAY_PUBLIC_DOMAIN:-claw.eysho.info}|g" \
       -e "s|__TRUSTED_PROXY_RANGE__|${TRUSTED_PROXY_RANGE:-172.30.0.3}|g" \
       /openclaw-config/openclaw.json > /home/node/.openclaw/openclaw.json
 fi
 
 # Refresh proxy trust and browser origins from deployment variables without replacing other persisted settings.
-node -e 'const fs=require("fs");const p="/home/node/.openclaw/openclaw.json";const c=JSON.parse(fs.readFileSync(p,"utf8"));c.gateway=c.gateway||{};c.gateway.trustedProxies=(process.env.TRUSTED_PROXY_RANGE||"172.30.0.3").split(",").map(x=>x.trim()).filter(Boolean);c.gateway.controlUi=c.gateway.controlUi||{};const o=["https://claw.eysho.info",`https://${process.env.RAILWAY_PUBLIC_DOMAIN||"claw.eysho.info"}`];c.gateway.controlUi.allowedOrigins=[...new Set(o)];fs.writeFileSync(p,JSON.stringify(c,null,2)+"\n");'
+node -e 'const fs=require("fs");const p="/home/node/.openclaw/openclaw.json";const c=JSON.parse(fs.readFileSync(p,"utf8"));c.gateway=c.gateway||{};c.gateway.trustedProxies=(process.env.TRUSTED_PROXY_RANGE||"172.30.0.3").split(",").map(x=>x.trim()).filter(Boolean);c.gateway.controlUi=c.gateway.controlUi||{};const o=["https://claw.eysho.info",`https://${process.env.RAILWAY_PUBLIC_DOMAIN||"claw.eysho.info"}`];c.gateway.controlUi.allowedOrigins=[...new Set(o)];c.plugins=c.plugins||{};c.plugins.allow=Array.isArray(c.plugins.allow)?c.plugins.allow:[];if(!c.plugins.allow.includes("affine"))c.plugins.allow.push("affine");c.plugins.entries=c.plugins.entries||{};if(!c.plugins.entries.affine)c.plugins.entries.affine={enabled:false,config:{}};const a=c.plugins.entries.affine;a.config=a.config||{};a.config.affineUrl=process.env.AFFINE_URL||a.config.affineUrl||"http://host.docker.internal:3010";fs.writeFileSync(p,JSON.stringify(c,null,2)+"\n");'
 
 # Load SOUL.md from GitHub profile README using PAT
 if [ -n "$GITHUB_PAT_TOKEN" ]; then
@@ -105,6 +103,12 @@ if [ ! -f /home/node/.openclaw/extensions/nvidia-speech/openclaw.plugin.json ]; 
   }
   rm -rf "$PLUGIN_SOURCE/node_modules"
   node /app/openclaw.mjs plugins install "$PLUGIN_SOURCE" --force --accept-capabilities
+fi
+
+# Install the API-compatible AFFiNE plugin from the image build, but do not enable it
+# until an AFFiNE backend and agent credentials have been configured.
+if [ ! -f /home/node/.openclaw/extensions/affine/openclaw.plugin.json ]; then
+  node /app/openclaw.mjs plugins install /app/dist/extensions/affine --force --accept-capabilities --no-enable
 fi
 
 # Gateway runs as root in this image; root-owned plugin sources pass OpenClaw's trust checks.

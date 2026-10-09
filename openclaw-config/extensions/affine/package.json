@@ -1,15 +1,25 @@
 {
-  "name": "@openclaw/affine",
-  "version": "0.1.0",
+  "name": "@bkg/openclaw-affine",
+  "version": "0.2.0",
   "private": true,
-  "description": "AFFiNE document tools for agents",
+  "description": "AFFiNE document tools for OpenClaw",
   "type": "module",
-  "openclaw": {
-    "extensions": [
-      "./index.ts"
-    ]
+  "files": ["index.js", "openclaw.plugin.json", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "node scripts/build.mjs"
   },
-  "devDependencies": {
-    "openclaw": "workspace:*"
+  "dependencies": {
+    "typebox": "1.3.34"
+  },
+  "openclaw": {
+    "extensions": ["./index.js"],
+    "compat": {
+      "pluginApi": ">=2026.9.9",
+      "minGatewayVersion": "2026.9.9"
+    },
+    "build": {
+      "openclawVersion": "2026.9.9",
+      "bundledDist": true
+    }
   }
 }

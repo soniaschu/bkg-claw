@@ -14,6 +14,10 @@ Requirements: Docker Engine with the Compose plugin, and an NVIDIA NIM API key f
 
 The root `docker-compose.yml` is the maintained local/server configuration. It expects an external Docker network named `bkg_net`; for a standalone deployment, create it with `docker network create bkg_net` first, or adapt the network declaration for your own environment.
 
+### Claude Code with NVIDIA GLM 5.3
+
+Claude Code 2.1.295 is installed on the server. The `claude-code-free` proxy is exposed only on `127.0.0.1:18082`, not on the public network. Use `claude-glm` to run the CLI through that proxy; for example, run `claude-glm` in a project directory or use `claude-glm -p "Inspect this project before changing anything."` for a one-shot prompt. The proxy maps Opus, Sonnet, and Haiku model requests to `z-ai/glm-5.3`. The regular `claude` command is left untouched.
+
 ## Railway deployment
 
 Railway does not deploy this Docker Compose stack as one service. Create two Railway services from this repository, in the same Railway project and environment.
@@ -36,7 +40,7 @@ Railway does not deploy this Docker Compose stack as one service. Create two Rai
 - Generate a public domain in Railway. Railway provides `RAILWAY_PUBLIC_DOMAIN`; the entrypoint uses it to allow the dashboard's browser origin.
 - Attach a persistent Railway volume mounted at `/home/node/.openclaw`. Without this volume, gateway settings and device-pairing state can be lost on redeploy.
 
-The Railway config files build each service from its matching Dockerfile. OpenClaw uses the official version-pinned `ghcr.io/openclaw/openclaw:2026.9.9` runtime; the NVIDIA speech plugin is installed from GitHub on a fresh volume and configured for German Magpie TTS. The plugin's current Parakeet STT endpoint is English-only, so this setup does not pretend German transcription is supported. The proxy service should stay private; only the OpenClaw dashboard needs public ingress. Store all credentials in Railway's Variables UI, never in Git. The legacy AFFiNE extension source is retained for a later API-compatible port, but is intentionally not enabled in this runtime because the current plugin installer rejects its old bundled-extension manifest.
+The Railway config files build each service from its matching Dockerfile. OpenClaw uses the official version-pinned `ghcr.io/openclaw/openclaw:2026.9.9` runtime; the NVIDIA speech plugin is installed from GitHub on a fresh volume and configured for German Magpie TTS. The plugin's current Parakeet STT endpoint is English-only, so this setup does not pretend German transcription is supported. The proxy service should stay private; only the OpenClaw dashboard needs public ingress. Store all credentials in Railway's Variables UI, never in Git. The AFFiNE extension is now built against the public OpenClaw plugin SDK and installed as `affine`. It remains disabled because the AFFiNE backend is currently not running (`host.docker.internal:3010` refuses connections) and no agent email/password are configured. Start/configure the matching AFFiNE service, set `AFFINE_URL`, `AFFINE_AGENT_EMAIL`, and `AFFINE_AGENT_PASSWORD` as deployment variables, then enable the plugin. The extension build is verified; end-to-end document operations are not yet verified without that backend.
 
 ## Configuration and security
 

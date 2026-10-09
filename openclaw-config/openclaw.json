@@ -57,7 +57,8 @@
     "allow": [
       "nvidia-speech",
       "github",
-      "memory-core"
+      "memory-core",
+      "affine"
     ],
     "entries": {
       "nvidia-speech": {
@@ -68,6 +69,12 @@
       },
       "memory-core": {
         "enabled": true
+      },
+      "affine": {
+        "enabled": false,
+        "config": {
+          "affineUrl": "__AFFINE_URL__"
+        }
       }
     }
   },

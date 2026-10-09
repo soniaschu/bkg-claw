@@ -9,9 +9,14 @@ services:
     restart: unless-stopped
     expose:
       - "8082"
+    ports:
+      - "127.0.0.1:18082:8082"
     environment:
       NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY:?NVIDIA_NIM_API_KEY is required}
       MODEL: nvidia_nim/${MODEL:-z-ai/glm-5.3}
+      MODEL_OPUS: nvidia_nim/${MODEL:-z-ai/glm-5.3}
+      MODEL_SONNET: nvidia_nim/${MODEL:-z-ai/glm-5.3}
+      MODEL_HAIKU: nvidia_nim/${MODEL:-z-ai/glm-5.3}
       NVIDIA_NIM_MAX_TOKENS: "81920"
       NVIDIA_NIM_TEMPERATURE: "1.0"
       NVIDIA_NIM_TOP_P: "1.0"
