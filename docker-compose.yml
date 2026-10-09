@@ -11,7 +11,7 @@ services:
       - "8082"
     environment:
       NVIDIA_NIM_API_KEY: ${NVIDIA_NIM_API_KEY:?NVIDIA_NIM_API_KEY is required}
-      MODEL: nvidia_nim/${MODEL:-stepfun-ai/step-3.5-flash}
+      MODEL: nvidia_nim/${MODEL:-z-ai/glm-5.3}
       NVIDIA_NIM_MAX_TOKENS: "81920"
       NVIDIA_NIM_TEMPERATURE: "1.0"
       NVIDIA_NIM_TOP_P: "1.0"
@@ -69,7 +69,7 @@ services:
     environment:
       HOME: /home/node
       TERM: xterm-256color
-      MODEL: ${MODEL:-nvidia_nim/stepfun-ai/step-3.5-flash}
+      MODEL: ${MODEL:-nvidia_nim/z-ai/glm-5.3}
       ANTHROPIC_API_KEY: sk-placeholder
       NVIDIA_API_KEY: ${NVIDIA_NIM_API_KEY:?NVIDIA_NIM_API_KEY is required}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:?OPENCLAW_GATEWAY_TOKEN is required}

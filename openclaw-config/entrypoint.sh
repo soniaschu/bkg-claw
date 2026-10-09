@@ -1,7 +1,7 @@
 #!/bin/sh
 # Seed configuration once; the persistent config must retain plugin install metadata.
 if [ ! -f /home/node/.openclaw/openclaw.json ]; then
-  sed -e "s|__MODEL__|${MODEL:-stepfun-ai/step-3.5-flash}|g" \
+  sed -e "s|__MODEL__|${MODEL:-z-ai/glm-5.3}|g" \
       -e "s|__PROXY_URL__|${PROXY_URL:-http://claude-code-free:8082}|g" \
       -e "s|__AFFINE_URL__|${AFFINE_URL:-http://host.docker.internal:3010}|g" \
       -e "s|__AFFINE_AGENT_EMAIL__|${AFFINE_AGENT_EMAIL:-}|g" \
