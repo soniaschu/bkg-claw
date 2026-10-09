@@ -107,7 +107,12 @@ fi
 
 # Install the API-compatible AFFiNE plugin from the image build, but do not enable it
 # until an AFFiNE backend and agent credentials have been configured.
-if [ ! -f /home/node/.openclaw/extensions/affine/openclaw.plugin.json ]; then
+AFFINE_INSTALLED_VERSION=""
+if [ -f /home/node/.openclaw/extensions/affine/package.json ]; then
+  AFFINE_INSTALLED_VERSION=$(node -e 'try { console.log(require("/home/node/.openclaw/extensions/affine/package.json").version || "") } catch {}')
+fi
+AFFINE_IMAGE_VERSION=$(node -e 'try { console.log(require("/app/dist/extensions/affine/package.json").version || "") } catch {}')
+if [ "$AFFINE_INSTALLED_VERSION" != "$AFFINE_IMAGE_VERSION" ]; then
   node /app/openclaw.mjs plugins install /app/dist/extensions/affine --force --accept-capabilities --no-enable
 fi
 
